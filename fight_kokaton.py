@@ -163,6 +163,28 @@ class Score:
         self.img = self.fonto.render(f"スコア：{self.value}", 0, self.color)
         screen.blit(self.img, self.rct)
 
+
+class Explosion:
+    """
+    爆発に関するクラス
+    """
+    def init(self, xy: tuple[int, int]):
+        #元のexplosion.gifと上下左右にflipしたものの2つのSurfaceをリストに格納
+        self.imgs = [pg.image.load("fig/explosion.gif"), pg.transform.flip(pg.image.load("fig/explosion.gif"), True, False)]
+        #爆発した爆弾のrct.centerに座標を設定
+        self.rct = self.imgs[0].get_rect()
+        self.rct.center = xy
+        #表示時間（爆発時間）lifeを設定
+        self.life = 10
+
+    def update(self, screen: pg.Surface):
+        #爆発経過時間lifeを１減算
+        self.life -= 1
+        #爆発経過時間lifeが正なら，Surfaceリストを交互に切り替えて爆発を演出
+        if self.life > 0:
+            screen.blit(self.imgs[self.life%2], self.rct) #lifeが奇数なら0番目，偶数なら1番目のSurfaceをblit
+
+
 def main():
     pg.display.set_caption("たたかえ！こうかとん")
     screen = pg.display.set_mode((WIDTH, HEIGHT))    
@@ -173,6 +195,7 @@ def main():
     beams = []  # ビームを格納するリスト
     score = Score()  # スコアクラスのインスタンス生成
     bombs = [Bomb((255, 0, 0), 10) for _ in range(NUM_OF_BOMBS)]
+    explosions = []  # Explosionインスタンス用のリスト
     clock = pg.time.Clock()
     tmr = 0
     while True:
@@ -201,6 +224,11 @@ def main():
                         beams[j] = None 
                         bombs[i] = None
                         bird.change_img(6, screen)
+                        #bombとbeamが衝突したらExplosionインスタンスを生成，リストにappend
+                        explosion = Explosion(bomb.rct.center) #爆発インスタンスを生成
+                        explosions.append(explosion) #リストに追加
+                        #lifeが0より大きいExplosionインスタンスだけのリストにする
+                        explosions = [explosion for explosion in explosions if explosion.life > 0]
                         score.value += 1  # スコア加算
                         pg.display.update()
 
@@ -218,8 +246,11 @@ def main():
         if bomb is not None:
             for bomb in bombs:     
                 bomb.update(screen)
-        #bomb2.update(screen)
-        # スコアの更新
+        
+        #lifeが0より大きいExplosionインスタンスだけのリストにする
+        explosions = [explosion for explosion in explosions if explosion.life > 0]
+        for explosion in explosions:
+            explosion.update(screen)
         score.update(screen)
         pg.display.update()
         tmr += 1
