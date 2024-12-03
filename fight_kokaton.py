@@ -147,7 +147,7 @@ def main():
     bird = Bird((300, 200))
     bomb = Bomb((255, 0, 0), 10)
     beam = None  # Beam(bird)  # ビームクラスのインスタンス生成
-    #bomb2 = Bomb((0, 0, 255), 20)
+
     clock = pg.time.Clock()
     tmr = 0
     while True:
